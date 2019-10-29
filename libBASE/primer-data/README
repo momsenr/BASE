@@ -1,0 +1,7 @@
+These two files in this folder are kept for documentation only
+The excel file has been used to generate libIgParser/primer.py using createPrimerDB.py
+If you want to modify the primer table for aBase, run
+
+createPrimerDB.py primer.xlsx primer.py
+
+where primer.xlsx is formatted just like specPCR_primer_2019_04_14.xlsx
