@@ -10,7 +10,7 @@
 - remove the lines with mouse genes from constant_loci.csv
 - run proc_constant_loci.sh constant_loci.csv
 - move human_gl_C.fasta to the libIgParser folder
-- makeblastdb -dbtype nucl -parse_seqids -in human_gl_C.fasta -out human_gl_C/ 
+- run the command makeblastdb -dbtype nucl -parse_seqids -in human_gl_C.fasta -out human_gl_C/ 
 
 # Run with example files
 - copy example files from example directory to working directory
