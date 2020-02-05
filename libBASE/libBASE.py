@@ -153,7 +153,7 @@ class SequenceFile():
                 "-germline_db_V ": '"'+cfg.germlinedb_V+'"',
                 "-germline_db_J ": cfg.germlinedb_J,
                 "-germline_db_D ": cfg.germlinedb_D,
-                "-auxiliary_data ": cfg.auxiliary_data,
+                "-auxiliary_data ": cfg.igblast_auxiliary_data,
                 "-domain_system": "imgt",
                 #only show one alignement for one germline sequence
                 "-num_alignments_V": "1",
