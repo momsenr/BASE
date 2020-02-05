@@ -88,8 +88,8 @@ class SequenceFile():
                         try:
                             self.aligned_start=int(self.BlastedOutputDict['v_hits'][0]['rank_1']['q_start'])
                         except:
-                            print("Internal error while parsing "+ filename + ": Could not create complete aligned sequence.")
-                            self.comment=" Internal error while parsing "+ filename + ": Could not create complete aligned sequence. "
+                            print("Internal error while parsing "+ self.filename + ": Could not create complete aligned sequence.")
+                            self.comment=" Internal error while parsing "+ self.filename + ": Could not create complete aligned sequence. "
                             self.successfullyParsed=False
                             self.chain_type="n/d"
 
@@ -191,7 +191,7 @@ class SequenceFile():
                 self.comment="executing igblastn failed"
                 print("executing igblast failed.")
                 print(my_error.cmd)
-                print("This happened while igblasting " + filename +". ")
+                print("This happened while igblasting " + self.filename +". ")
                 return
             #saving igblast_output
             if(igblast_output is not None): 
