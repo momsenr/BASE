@@ -30,7 +30,7 @@ for filename in args.input:
 
 if (args.quality):
     for seq in parsed_sequences:
-        if(hasattr(seq, 'chain_type') and seq.chain_type is "H"):
+        if(hasattr(seq, 'chain_type') and seq.chain_type == "H"):
             print(seq.comment)
             print(seq.filename + ". IgSC identification yields: " + seq.IgSubClass)
 
