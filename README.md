@@ -2,6 +2,7 @@
 - install igblast (see https://ncbi.github.io/igblast/cook/How-to-set-up.html)
 - - download the germline V D and J genes (see https://ncbi.github.io/igblast/cook/How-to-set-up.html), and set up the blast databases and name them accordingly (e.g. V_without_orphon)
 - install blast
+- install the python libraries openpyxl and BioPython using pip or any other package manager
 - adjust libBASE/pathconfig.py to your local configuration
 
 # Setting up the constant_segments database for Ig subclass determination
