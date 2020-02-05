@@ -134,7 +134,7 @@ class SequenceFile():
 
             if(not os.path.isdir("./internal_data")):
                 try:
-                    shutil.copytree(cfg.IGDATA, './internal_data')
+                    shutil.copytree(cfg.igblast_internal_data, './internal_data')
                 except OSError as my_err:
                     print("An error occured while IgBlasting: " + str(my_err))
 
