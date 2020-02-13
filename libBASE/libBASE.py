@@ -739,18 +739,18 @@ class AlignPCRObject():
 
         if(pcr2.chain_type=="H"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATTC")==-1):
-                self.output+="CAVE: Likely Mutation in 5' primer. "
+                self.output+=". CAVE: Likely Mutation in 5' primer. "
             if(pcr2.seq.    find("TCAGCGTCGACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCC")==-1):
-                self.output+="CAVE: Likely Mutation in 3' primer. "
+                self.output+=". CAVE: Likely Mutation in 3' primer. "
         if(pcr2.chain_type=="K"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATT")==-1 and pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATG")==-1):
-                self.output+="CAVE: Likely Mutation in 5' primer. "
+                self.output+=". CAVE: Likely Mutation in 5' primer. "
             if(pcr2.seq.find("ATCAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1 and pcr2.seq.find("ATTAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1):
-                self.output+="CAVE: Likely Mutation in 3' primer. "
+                self.output+=". CAVE: Likely Mutation in 3' primer. "
         if(pcr2.chain_type=="L"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTTC")==-1):
-                self.output+="CAVE: Likely Mutation in 5' primer. "
+                self.output+=". CAVE: Likely Mutation in 5' primer. "
             if(pcr2.seq.find("CACTCTGTTCCCGCCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1 and pcr2.seq.find("CACTCTGTTCCCACCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1):
-                self.output+="CAVE: Likely Mutation in 3' primer. "
+                self.output+=". CAVE: Likely Mutation in 3' primer. "
                 
         self.shmanalysis="Total SHM according to 2nd pcr/plasmid: " + str(ed1['SHM']) + "/" + str(ed2['SHM'])
