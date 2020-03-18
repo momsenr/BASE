@@ -141,7 +141,7 @@ for ct in chains.keys():
                 ws[columndict[ct]['Function']+str(seq.row)]="BQ - file not found"
                 ws[columndict[ct]['Comment']+str(seq.row)]="File "+str(filename)+" not found."
             except:
-                sys.exit("OOPS! File " + filename + " not found! Also, no 'Comment' column was found. Please make sure there is such a column given in the range specified.")
+                sys.exit("OOPS! File " + filename + " not found! Also, either 'Comment' or 'Function' column was not found. Please make sure there are columns with that name in the range specified.")
         except ValueError as my_err:
             sys.exit("OOPS! An error occured while parsing " + filename +". " + str(my_err) +". Aborting ...")
         except OSError as my_err:
