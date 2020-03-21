@@ -116,6 +116,10 @@ for ct in chains.keys():
                 continue
 
         filename=seq.value
+        
+        #21.03.21 the following line is a workaround for the inconsistent naming scheme of Eurofins
+        filename=filename.replace("-","_")
+        
         if(args.dataprefix is not None):
             filename=args.dataprefix+str(filename)+".ab1"
         try:
