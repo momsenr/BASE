@@ -96,8 +96,11 @@ for seq, in pcr2read:
 
         try:
             plasmid=SequenceFile(filename_plasmid)
-            temp=AlignPCRObject(pcr2,plasmid)
-            output=temp.output
+            if(plasmid.successfullyParsed==True):
+                temp=AlignPCRObject(pcr2,plasmid)
+                output=temp.output
+            else:
+                output="BQ: Could not blast " + plasmid.filename + ". This could either be due to bad sequencing quality, or maybe because it's an empty vector? igblast complained: " + plasmid.comment
         except FileNotFoundError as err:
             output="FileNotFound"
             print(str(err))
