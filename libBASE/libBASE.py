@@ -739,17 +739,71 @@ class AlignPCRObject():
 
         if(pcr2.chain_type=="H"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATTC")==-1):
-                self.output+=". CAVE: Likely Mutation in 5' primer. "
+                #including the 19aa leader sequence
+                aligned_with_leader_seq=pcr2.oriented_seq[pcr2.aligned_start-58:pcr2.aligned_end]
+                try:
+                    transl_aligned_with_leader_seq=aligned_with_leader_seq.translate()
+                except:
+                    transl_aligned_with_leader_seq=""
+                
+                if(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHG") is True):
+                    #this is a common mutation which is probably benign
+                    self.output+=". S19G mutation in 5' primer - probably benign. "
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
+                    self.output+=". sSHM (5'). "
+                elif(transl_aligned_with_leader_seq is ""):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                
             if(pcr2.seq.    find("TCAGCGTCGACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCC")==-1):
                 self.output+=". CAVE: Likely Mutation in 3' primer. "
         if(pcr2.chain_type=="K"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATT")==-1 and pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATG")==-1):
-                self.output+=". CAVE: Likely Mutation in 5' primer. "
+                #including the 19aa leader sequence
+                aligned_with_leader_seq=pcr2.oriented_seq[pcr2.aligned_start-58:pcr2.aligned_end]
+                try:
+                    transl_aligned_with_leader_seq=aligned_with_leader_seq.translate()
+                except:
+                    transl_aligned_with_leader_seq=""
+                
+                if(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHG") is True):
+                    #this is a common mutation which is probably benign
+                    self.output+=". S19G mutation in 5' primer - probably benign. "
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
+                    self.output+=". sSHM (5'). "
+                elif(transl_aligned_with_leader_seq is ""):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                        
             if(pcr2.seq.find("ATCAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1 and pcr2.seq.find("ATTAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1):
                 self.output+=". CAVE: Likely Mutation in 3' primer. "
         if(pcr2.chain_type=="L"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTTC")==-1):
-                self.output+=". CAVE: Likely Mutation in 5' primer. "
+                #including the 19aa leader sequence
+                aligned_with_leader_seq=pcr2.oriented_seq[pcr2.aligned_start-58:pcr2.aligned_end]
+                try:
+                    transl_aligned_with_leader_seq=aligned_with_leader_seq.translate()
+                except:
+                    transl_aligned_with_leader_seq=""
+                
+                if(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHG") is True):
+                    #this is a common mutation which is probably benign
+                    self.output+=". S19G mutation in 5' primer - probably benign. "
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
+                    self.output+=". sSHM (5'). "
+                elif(transl_aligned_with_leader_seq is ""):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    
             if(pcr2.seq.find("CACTCTGTTCCCGCCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1 and pcr2.seq.find("CACTCTGTTCCCACCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1):
                 self.output+=". CAVE: Likely Mutation in 3' primer. "
                 
