@@ -43,11 +43,9 @@ class SequenceFile():
         Pass the whole sequence file to this class and it will deal with it
         Arguments:
             filename - string for the sequence file to parse
-
         Optional arguments:
             filetype - string for the filetyp of filename, default is abi.
             igblast_output - where to write the output of igblastn to. Defaults to none. 
-
         Methods:
             writeToFast: Write file to fasta, takes output filename as an argument
             IgBlastMe: blasts the sequence and determes the Ig Subclass. takes a filename as optional parameter to write the output of igblastn to 
@@ -363,16 +361,21 @@ class SequenceFile():
                 return True
             else:
                 False
-            
+        
+        def align_to_ORF(self,pos):
+            """ returns the position of the nucleotide, where the amino acid translation starts, that the nucleotide pos is translated into (as                 defined by the ORF of the igblast alignment)
+            """            
+            if(pos>len(self.gene_seq)):
+                return "n/d"
+            aapos=int(pos/3)
+            offset=self.BlastedOutputDict['v_hits'][0]['rank_1']['s_start']-1
+            return int(aapos*3-offset)        
+        
         def translatedAA(self,pos):
             """returns the translation of the aligned sequence and the gene sequence
             parameter pos is position relative to the beginning of the V gene
             """
-            if(pos>len(self.gene_seq)):
-                return ["n/d","n/d"]
-            aapos=int(pos/3)
-            offset=self.BlastedOutputDict['v_hits'][0]['rank_1']['s_start']-1
-            tmp=int(aapos*3-offset)
+            tmp=self.align_to_ORF(pos)
             try:
                 aa_gene=Seq(self.gene_seq[tmp:tmp+3]).translate()
             except TranslationError:
@@ -702,15 +705,7 @@ class AlignPCRObject():
                     #it is "silent" compared to the gene sequence though, we count it as _silent_
                     silent_mutations_added[region]+=1
                 else:
-                    #if(self.pcr1.IsThisNTSilent(index)==self.pcr2.IsThisNTSilent(offset+index)):
-                    #
-                    #print(index)
-                    #print("letter: "+letter)
-                    #print("plasmid: [" + pcr2.aligned_seq[offset + index] + "]"+ pcr2.aligned_seq[offset + index+1]+ pcr2.aligned_seq[offset + index+2] )
-                    #print("gene: [" + pcr2.original_nt(pos_pcr2)+"]"+pcr2.original_nt(pos_pcr2+1)+pcr2.original_nt(pos_pcr2+2)+pcr2.original_nt(pos_pcr2+3)+pcr2.original_nt(pos_pcr2+4)+pcr2.original_nt(pos_pcr2+5))
                     nonsilent_mutations_exchanged[region]+=1
-                    #nonsilent_mutations_added[region]+=1
-
 
         if(shmfr1_primer_canceled>0):
             self.output+=str(shmfr1_primer_canceled) + " SHM- FR1(P)"
@@ -754,12 +749,27 @@ class AlignPCRObject():
                 elif(transl_aligned_with_leader_seq is ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19] + " instead of MGWSCIILFLVATATGVHS."
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19] + " instead of MGWSCIILFLVATATGVHS."
                 
-            if(pcr2.seq.    find("TCAGCGTCGACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCC")==-1):
-                self.output+=". CAVE: Likely Mutation in 3' primer. "
+            if(pcr2.seq.find("TCAGCGTCGACCAAGGGCCCATCGGTCTTCCCCCTGGCACCCTCC")==-1):
+                try:
+                    #we start 6 nucleotides before the ORF of the last aligned nucleotide
+                    plasmid_3_dash_primer_region_pos=int(pcr2.align_to_ORF(index+offset))+pcr2.aligned_start-1-6
+                    #we are interested in the 15 AA which correspond to this
+                    plasmid_3_dash_primer_region_seq=pcr2.oriented_seq[plasmid_3_dash_primer_region_pos:plasmid_3_dash_primer_region_pos+45]
+                    plasmid_3_dash_primer_region_transl=plasmid_3_dash_primer_region_seq.translate()
+                except:
+                    plasmid_3_dash_primer_region_transl=""
+                
+                if(plasmid_3_dash_primer_region_transl.startswith("SSASTKGPSVFPLAP")): 
+                    self.output+=". sSHM (3'). "
+                elif(plasmid_3_dash_primer_region_transl is ""):
+                    self.output+=". CAVE: Likely Mutation in 3' primer. The 3' region could not be translated, likely non-functional plasmid"
+                else:
+                    self.output+=". CAVE: Likely Mutation in 3' primer and possibly non-functional plasmid. Translation of relevant 15 aa is: " + str(plasmid_3_dash_primer_region_transl) + " instead of SSASTKGPSVFPLAP."
+                    
         if(pcr2.chain_type=="K"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATT")==-1 and pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATG")==-1):
                 #including the 19aa leader sequence
@@ -777,12 +787,28 @@ class AlignPCRObject():
                 elif(transl_aligned_with_leader_seq is ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
                         
             if(pcr2.seq.find("ATCAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1 and pcr2.seq.find("ATTAAACGTACGGTGGCTGCACCATCTGTCTTCATCTTCCCGCCA")==-1):
-                self.output+=". CAVE: Likely Mutation in 3' primer. "
+                try:
+                    #we start 6 nucleotides before the ORF of the last aligned nucleotide
+                    plasmid_3_dash_primer_region_pos=int(pcr2.align_to_ORF(index+offset))+pcr2.aligned_start-1-6
+                    #we are interested in the 15 AA which correspond to this
+                    plasmid_3_dash_primer_region_seq=pcr2.oriented_seq[plasmid_3_dash_primer_region_pos:plasmid_3_dash_primer_region_pos+45]
+                    plasmid_3_dash_primer_region_transl=plasmid_3_dash_primer_region_seq.translate()
+                except:
+                    plasmid_3_dash_primer_region_transl=""
+                
+
+                if(plasmid_3_dash_primer_region_transl.startswith("IKRTVAAPSVFIFPP")): 
+                    self.output+=". sSHM (3'). "
+                elif(plasmid_3_dash_primer_region_transl is ""):
+                    self.output+=". CAVE: Likely Mutation in 3' primer. The 3' region could not be translated, likely non-functional plasmid"
+                else:
+                    self.output+=". CAVE: Likely Mutation in 3' primer and possibly non-functional plasmid. Translation of relevant 15 aa is: " + str(plasmid_3_dash_primer_region_transl) + " instead of IKRTVAAPSVFIFPP."
+                    
         if(pcr2.chain_type=="L"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTTC")==-1):
                 #including the 19aa leader sequence
@@ -800,11 +826,25 @@ class AlignPCRObject():
                 elif(transl_aligned_with_leader_seq is ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is not True):
-                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]
+                    self.output+=". CAVE: Likely Mutation in 5' primer and non-functional plasmid. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
                     
             if(pcr2.seq.find("CACTCTGTTCCCGCCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1 and pcr2.seq.find("CACTCTGTTCCCACCCTCGAGTGAGGAGCTTCAAGCCAACAAGGCCACACTG")==-1):
-                self.output+=". CAVE: Likely Mutation in 3' primer. "
+                try:
+                    #we start 30 nucleotides after the ORF of the last aligned nucleotide
+                    plasmid_3_dash_primer_region_pos=int(pcr2.align_to_ORF(index+offset))+pcr2.aligned_start-1+30
+                    
+                    #we are interested in the 26 AA which correspond to this
+                    plasmid_3_dash_primer_region_seq=pcr2.oriented_seq[plasmid_3_dash_primer_region_pos:plasmid_3_dash_primer_region_pos+78]
+                    plasmid_3_dash_primer_region_transl=plasmid_3_dash_primer_region_seq.translate()
+                    
+                except:
+                    plasmid_3_dash_primer_region_transl=""
+                
+                if(plasmid_3_dash_primer_region_transl.startswith("LFPPSSEELQANKATLVCLISDFYPG")): 
+                    self.output+=". sSHM (3'). "
+                else:
+                    self.output+=". CAVE: Likely Mutation in 3' primer and possibly non-functional plasmid. Translation of 26 aa is: " + str(plasmid_3_dash_primer_region_transl + " instead of LFPPSSEELQANKATLVCLISDFYPG.")
                 
         self.shmanalysis="Total SHM according to 2nd pcr/plasmid: " + str(ed1['SHM']) + "/" + str(ed2['SHM'])
