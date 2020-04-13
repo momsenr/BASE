@@ -566,6 +566,7 @@ class AlignPCRObject():
         self.pcr1=pcr1
         self.pcr2=pcr2
         self.shmanalysis=""
+        self.number_of_shm_v_gene_ideal=""
 
         if(pcr1.mean_phred_quality<20):
             self.output="BQ  - " + pcr1.filename
@@ -697,8 +698,6 @@ class AlignPCRObject():
 
             else:#both pcr1 and pcr2 differ from the 'predicted' gene sequence
                 region=pcr2.identify_gene_region(pos_pcr2)
-                #if(region=="v"):
-                #    region=pcr2.identify_V_gene_subregion(pos_pcr2)
         
                 if(self.pcr2.IsThisNTSilent(offset+index)):
                     #pcr2 introduced a new mutation relative to pcr1, which is nonsilent 
@@ -725,13 +724,42 @@ class AlignPCRObject():
             self.output+=" "+ str(shmj_primer_added) + " SHM J(P)+"
         if(self.output==""):
             self.output="0" 
-
-        #Finally, we check if the "cloning primer sequence" is contained in the sequence. This is necessary, since the Gibson HiFi Assembly might produce errors
-        # which can not be caught by the above method, since they lie constant part. This is beta and only enabled on the H3 primer set
+            
         ed1=exportDict(pcr1)
         ed2=exportDict(pcr2)
-
-
+        
+        #the idealized antibody is the antibody as we expect it in the patient. We are interested in the V gene somatic hypermutation count
+        # as it's present in the patient, i.e. we want to not consider all SHMs which are due to 
+        #- PCR2 sequencing artifacts: shmfr1_primer_canceled
+        #- PCR2 (Taq) amplification silent_mutations_canceled of 'fr1','cdr1','fr2','cdr2','fr3','cdr3'
+        try:
+            number_of_shm_v_gene_pcr2=int(ed1['SHM'])
+            additional_nonsilent_mutations=""
+           
+            self.number_of_shm_v_gene_ideal=number_of_shm_v_gene_pcr2 - shmfr1_primer_canceled
+            
+            regions_to_consider = ('fr1','cdr1','fr2','cdr2','fr3','cdr3')
+            for reg in silent_mutations_canceled:
+                if reg.startswith(regions_to_consider) :
+                    self.number_of_shm_v_gene_ideal=self.number_of_shm_v_gene_ideal - silent_mutations_canceled[reg]
+            
+            for reg in nonsilent_mutations_added:
+                if reg.startswith(regions_to_consider) :
+                    additional_nonsilent_mutations+=" " + str(nonsilent_mutations_added[reg]) + " nsSHM+ " + reg + " "
+            for reg in nonsilent_mutations_exchanged:
+                if reg.startswith(regions_to_consider) :
+                    additional_nonsilent_mutations+=" " + str(nonsilent_mutations_exchanged[reg]) + " nsSHMchg " + reg + " "    
+            for reg in nonsilent_mutations_canceled:
+                 if reg.startswith(regions_to_consider) :
+                    additional_nonsilent_mutations+=" " + str(nonsilent_mutations_canceled[reg]) + " nsSHM- " + reg + " "
+            
+            if(additional_nonsilent_mutations is not ""):
+                self.number_of_shm_v_gene_ideal= str(self.number_of_shm_v_gene_ideal) + " (+ " + additional_nonsilent_mutations + " due to SHM tolerance)"
+        except:
+            self.number_of_shm_v_gene_ideal="n/a"
+        
+        #Finally, we check if the "cloning primer sequence" is contained in the sequence. This is necessary, since the Gibson HiFi Assembly might produce errors
+        # which can not be caught by the above method, since they lie constant part. This is beta and only enabled on the H3 primer set        
         if(pcr2.chain_type=="H"):
             if(pcr2.seq.find("ATGGGATGGTCATGTATCATCCTTTTTCTAGTAGCAACTGCAACCGGTGTACATTC")==-1):
                 #including the 19aa leader sequence
