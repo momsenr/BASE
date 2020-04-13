@@ -36,7 +36,7 @@ parser.add_argument('output', action='store', help='output file')
 parser.add_argument('--dataprefix', action='store',help='prefix for the sequence file filenames. this can be a directory name')
 parser.add_argument('--pcr2read', action='store', help='column where the name of the sequencing file of the 2nd pcr is found')
 parser.add_argument('--plasmidread', action='store', help='column where the name of the sequencing file of the plasmid is found')
-parser.add_argument('--shmanalysis', action='store', help='columns where the somatic hypermutation analysis should be written to. If four columns (separated by a comma) instead of one are given, the software will also give a more detailed analysis of the somatic hypermutations of the pcr2 read, of the plasmid, and the germline antibody.')
+parser.add_argument('--shmanalysis', action='store', help='columns where the somatic hypermutation analysis should be written to. If four columns (separated by a comma) instead of one are given, the software will also give a more detailed analysis of the somatic hypermutations of the pcr2 read, of the plasmid, and the idealized antibody.')
 
 args = parser.parse_args()
 
@@ -63,9 +63,8 @@ if(args.shmanalysis is not None):
     if(len(args.shmanalysis)>1):
             pcr2_shm_column=args.shmanalysis.split(",")[1]
             plasmid_shm_column=args.shmanalysis.split(",")[2]
-            #total_shm_column is not yet implemented as of 2019-09-04     
-            total_shm_column=args.shmanalysis.split(",")[3]
-
+            ideal_shm_column=args.shmanalysis.split(",")[3]
+            
 to_compare=[]
 
 ###chains['H']] is loaded by chains['H']=workbook.active[args.heavy]. if args.heavy=Z (a whole row),
@@ -101,11 +100,12 @@ for seq, in pcr2read:
                 output=temp.output
             else:
                 output="BQ: Could not blast " + plasmid.filename + ". This could either be due to bad sequencing quality, or maybe because it's an empty vector? igblast complained: " + plasmid.comment
+                
         except FileNotFoundError as err:
             output="FileNotFound"
             print(str(err))
-        except:
-            output="Uncaught exception. Please inform the author of this software and provide the ab1-file(s)." 
+        #except:
+        #    output="Uncaught exception. Please inform the author of this software and provide the ab1-file(s)." 
        
         output_cell=differential_analysis_column+str(seq.row)
 
@@ -132,6 +132,8 @@ for seq, in pcr2read:
         elif(output.find("nsSHM-")!=-1):
             ws[output_cell].fill = orangeFill
         elif(output.find("differ")!=-1):
+            ws[output_cell].fill = orangeFill
+        elif(output.find("ikely")!=-1):
             ws[output_cell].fill = orangeFill
         elif(output.find("empty")!=-1):
             ws[output_cell].fill = redFill
@@ -161,7 +163,11 @@ for seq, in pcr2read:
                     ws[plasmid_shm_column+str(seq.row)]="n/a"
             except:
                 ws[plasmid_shm_column+str(seq.row)]="n/a"
-     
+           
+            
+            ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
+            ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
+                
         if(green is not True):
             print(output)
 
