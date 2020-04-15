@@ -737,13 +737,14 @@ class AlignPCRObject():
         try:
             number_of_shm_v_gene_pcr2=int(ed1['SHM'])
             additional_nonsilent_mutations=""
-           
             self.number_of_shm_v_gene_ideal=number_of_shm_v_gene_pcr2 - shmfr1_primer_canceled
             
             regions_to_consider = ('fr1','cdr1','fr2','cdr2','fr3','cdr3')
             for reg in silent_mutations_canceled:
                 if reg.startswith(regions_to_consider) :
-                    self.number_of_shm_v_gene_ideal=self.number_of_shm_v_gene_ideal - silent_mutations_canceled[reg]
+                    #in the cdr3 region there is no true germline sequence, since most of the nts
+                    if(reg.startswith('cdr3')==False):
+                        self.number_of_shm_v_gene_ideal=self.number_of_shm_v_gene_ideal - silent_mutations_canceled[reg]
             
             for reg in nonsilent_mutations_added:
                 if reg.startswith(regions_to_consider) :
