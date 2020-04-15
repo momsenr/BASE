@@ -376,6 +376,8 @@ class SequenceFile():
             parameter pos is position relative to the beginning of the V gene
             """
             tmp=self.align_to_ORF(pos)
+            if(tmp == "n/d"):
+                return ["n/d","n/d"]
             try:
                 aa_gene=Seq(self.gene_seq[tmp:tmp+3]).translate()
             except TranslationError:
