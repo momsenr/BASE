@@ -340,7 +340,7 @@ class SequenceFile():
                     continue
                 lower=int(self.BlastedOutputDict['alignment_summaries'][region]['from'])
                 upper=int(self.BlastedOutputDict['alignment_summaries'][region]['to'])
-                if(lower<=pos<upper):
+                if(lower<=pos<=upper):
                     return region
             return "n/d"
         
@@ -645,8 +645,6 @@ class AlignPCRObject():
                 if(pcr2.aligned_seq[offset+index]==letter):
                     continue
             except IndexError:
-                #print("offset:" + str(offset) + " index: " + str(index) + "letter:" + str(letter))
-                #print(pcr2.aligned_seq[offset+index-5:offset+index-1])
                 try: 
                     last_compared=str(pcr2.aligned_seq[offset+index-7:offset+index-1])
                 except IndexError:
@@ -665,9 +663,7 @@ class AlignPCRObject():
                     shmj_primer_canceled=shmj_primer_canceled+1
                 else:
                     region=pcr2.identify_gene_region(pos_pcr2)
-                    #if(region=="v"):
-                    #    region=pcr2.identify_V_gene_subregion(pos_pcr2)
-                    
+
                     translation1=self.pcr1.translatedAA(index+offset)
                     translation2=self.pcr2.translatedAA(offset+index)
                         
@@ -679,11 +675,8 @@ class AlignPCRObject():
                 if(offset+index> len(pcr2.gene_seq) - nt_tolerance_reverse):#this specific discrepancy (2nd pcr has same nt like gene, 
                     #1st pcr has mutation, nt is at the end of J gene) is due to primer overlap
                     shmj_primer_added=shmj_primer_added+1
-                #print("pcr1 is correct at pos " + str(offset+index) + " sequence in pcr1 is: " + letter) 
                 else:
                     region=pcr2.identify_gene_region(pos_pcr2)
-                    #if(region=="v"):
-                    #    region=pcr2.identify_V_gene_subregion(pos_pcr2)
                     
                     translation1=self.pcr1.translatedAA(index+offset)
                     translation2=self.pcr2.translatedAA(offset+index)
