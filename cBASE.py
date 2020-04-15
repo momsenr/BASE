@@ -163,15 +163,19 @@ for seq, in pcr2read:
                     ws[plasmid_shm_column+str(seq.row)]="n/a"
             except:
                 ws[plasmid_shm_column+str(seq.row)]="n/a"
-           
-            
-            ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
-            ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
+            try:
+                if(temp.pcr2.successfullyParsed==True and temp.pcr1.successfullyParsed==True):
+                    ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
+                else:
+                    ws[ideal_shm_column+str(seq.row)]="n/a"
+            except:
+                ws[ideal_shm_column+str(seq.row)]="n/a"
                 
         if(green is not True):
             print(output)
 
         output=""
+        temp=None
         green=False
     except FileNotFoundError as err:
         print(str(err))
