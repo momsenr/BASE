@@ -640,8 +640,9 @@ class AlignPCRObject():
             if(offset+index<0):
                 if(self.warning is False):
                     self.output+="Warning: Plasmid sequence seems to be shorter than PCR2. "
-                #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
-                #if this is not the case, we skip the first nucleotides
+                    self.warning=True
+                    #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
+                    #if this is not the case, we skip the first nucleotides
                 continue
             try:
                 if(pcr2.aligned_seq[offset+index]==letter):
