@@ -635,9 +635,11 @@ class AlignPCRObject():
         nonsilent_mutations_exchanged=collections.defaultdict(int)
         silent_mutations_canceled=collections.defaultdict(int)
               
-
+        self.warning=False
         for index, letter in enumerate(pcr1.aligned_seq):
             if(offset+index<0):
+                if(self.warning is False):
+                    self.output+="Warning: Plasmid sequence seems to be shorter than PCR2. "
                 #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
                 #if this is not the case, we skip the first nucleotides
                 continue
