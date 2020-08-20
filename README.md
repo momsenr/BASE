@@ -24,7 +24,7 @@ There are three ways to access BASE. Either you can install it locally on your m
 To validate a successful installation, you can run BASE with the files in the example directory. In order to perform the example run, you need to
 - copy the content from the example directory to a working directory
 - run aBASE-testrun.sh or cBASE-testrun.sh (linux)
-- compare your output with the expected output provided in the example folder
+- compare your output with the expected output provided in the files aBASE-example-out.xlsx and cBASE-example-out.xlsx in the example folder
 
 # Explanation of cBASE output abbreviations
 
