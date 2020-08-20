@@ -4,7 +4,7 @@ Repertoire analysis of patient-derived recombinant monoclonal antibodies is an i
 BASE offers an easy-to-use software solution suitable for complete Ig sequence data analysis and tracking during recombinant mcAB cloning from single cells. Plasmid sequence identity confirmation by cBASE offers functionality not provided by existing software solutions in the field and will help to reduce time-consuming steps of the monoclonal antibody generation workflow.
 
 # How to use BASE
-There are three ways to use BASE. Either you can install it locally on your machine (instructions below), which takes about 30 minutes. Alternatiely, you find a A fully functional fully-functional and executable version of BASE which reproduces the results presented in the accompanying paper (https://www.biorxiv.org/content/10.1101/836999v1) is available under https://codeocean.com/capsule/3514767/tree. Duplicating this code capsule allows you to use BASE online. As a third option, you can export a Docker file from the Code Ocean capsule for local installation. This Docker file can be also found in this github repository.
+There are three ways to use BASE. Either you can install it locally on your machine (instructions below), which takes about 30 minutes. Alternatiely, you find a A fully functional fully-functional and executable version of BASE which reproduces the results presented in the accompanying paper (https://www.biorxiv.org/content/10.1101/836999v1) is available under https://codeocean.com/capsule/3514767/tree. Duplicating this code capsule allows you to use BASE online. As a third option, you can export a Docker file from the Code Ocean capsule for local installation.
 
 # Installing BASE on your local machine
 - First you need to install several dependencies:
