@@ -1,10 +1,8 @@
 # Background information about BASE
 Repertoire analysis of patient-derived recombinant monoclonal antibodies is an important tool to study the role of B cells in autoimmune diseases of the human brain and beyond. Current protocols for generation of patient-derived recombinant monoclonal antibody libraries are time-consuming and contain repetitive steps, some of which can be assisted with the help of software automation. We developed BASE, an easy-to-use software for complete data analysis in single cell immunoglobulin cloning. BASE consists of two modules: aBASE for immunological annotations and cloning primer lookup, and cBASE for plasmid sequence identity confirmation before expression.
 
-BASE offers an easy-to-use software solution suitable for complete Ig sequence data analysis and tracking during recombinant mcAB cloning from single cells. Plasmid sequence identity confirmation by cBASE offers functionality not provided by existing software solutions in the field and will help to reduce time-consuming steps of the monoclonal antibody generation workflow.
-
 # How to use BASE
-There are three ways to use BASE. Either you can install it locally on your machine (instructions below), which takes about 30 minutes. Alternatiely, you find a A fully functional fully-functional and executable version of BASE which reproduces the results presented in the accompanying paper (https://www.biorxiv.org/content/10.1101/836999v1) is available under https://codeocean.com/capsule/3514767/tree. Duplicating this code capsule allows you to use BASE online. As a third option, you can export a Docker file from the Code Ocean capsule for local installation.
+There are three ways to access BASE. Either you can install it locally on your machine (instructions below), which takes about 30 minutes. Alternatiely, you find a A fully functional fully-functional and executable version of BASE which reproduces the results presented in the accompanying paper (https://www.biorxiv.org/content/10.1101/836999v1) is available under https://codeocean.com/capsule/3514767/tree. Duplicating this code capsule allows you to use BASE online. As a third option, you can export a Docker file from the Code Ocean capsule for local installation.
 
 # Installing BASE on your local machine
 - First you need to install several dependencies:
