@@ -2,10 +2,12 @@
 import sys
 try:
     from Bio.Seq import Seq
-    from Bio.Alphabet import IUPAC
 except ImportError:
-	print( "Need Biopython to use the IgBlast output parser class")
+	sys.exit( "Please install BioPython module to use the BASE.")
 
+if(float(sys.modules["Bio"].__version__)<1.78):
+    print("Using an old version of BioPython in which Alphabet is not deprecated (https://biopython.org/wiki/Alphabet). Please consider upgrading to BioPython-1.78 or higher")
+    from Bio.Alphabet import IUPAC
 
 """
 Originally taken from pyigblast
@@ -147,8 +149,13 @@ class LoadBlastedOutput():
     def translate_junction(self):
     	self.cdr3_partial = ""
     	if self.junction_together:
-    		coding_region = Seq(self.junction_together,IUPAC.ambiguous_dna)
-    		self.cdr3_partial = str(coding_region.translate())
+            #workaround 27.12.2020 - Alphabet has been deprecated starting BioPython 1.78
+            if(float(sys.modules["Bio"].__version__)<1.78):
+                coding_region = Seq(self.junction_together,IUPAC.ambiguous_dna)
+            else:
+                coding_region = Seq(self.junction_together)
+
+            self.cdr3_partial = str(coding_region.translate())
 
     def parse_rearranment(self):
         _return_dict = {}
@@ -193,7 +200,7 @@ class LoadBlastedOutput():
         #2018-04-18: we treat cdr3 differently: since we are actually interested in the whole cdr3 region, not the cdr3 region which comes from the top V gene hit, we modify this a bit:
         #try:
         #2019-05-01: further modified this region to evaluate if we detected a cdr3 region or not
-        if(self.total_identifiable_cdr3 is not "0"):
+        if(self.total_identifiable_cdr3 != "0"):
             if(not "cdr3" in _return_dict or int(_return_dict["cdr3"]['from'])!=int(self.cdr3_start)):
             #cdr3_start comes from the "sub-region sequence details" field of igblast, whereas "cdr3[from] comes from the
             #alignment summary. Usually they coincide, if they don't this is most likely due to bad quality/problems with the read
