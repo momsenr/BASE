@@ -195,7 +195,7 @@ for seq, in pcr2read:
             if(green == True):
                 ws[args.manualanalysis+str(seq.row)].fill=deepgreenFill
                 ws[args.manualanalysis+str(seq.row)]="OK"
-            if(yellow == True):
+            elif(yellow == True):
                 ws[args.manualanalysis+str(seq.row)].fill=yellowFill
                 ws[args.manualanalysis+str(seq.row)]="1 SHM"
             else:
