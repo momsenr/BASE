@@ -9,11 +9,13 @@ import sys
 
 from libBASE.libBASE import AlignPCRObject
 
-from openpyxl.styles import Color, PatternFill, Font, Border
-from openpyxl.styles import colors
+from openpyxl.styles import Color, PatternFill, Font, Border, Alignment, colors
 
 redFill = PatternFill(start_color='FFFF0000',
                    end_color='FFFF0000',
+                   fill_type='solid')
+yellowFill = PatternFill(start_color='ffff00',
+                   end_color='ffff00',
                    fill_type='solid')
 orangeFill = PatternFill(start_color='d1731e',
                    end_color='d1731e',
@@ -27,7 +29,10 @@ deepgreenFill = PatternFill(start_color='00B050',
 purpleFill = PatternFill(start_color='826aaf',
                    end_color='826aaf',
                    fill_type='solid')
-#
+pinkFill = PatternFill(start_color='ff99ff',
+                   end_color='ff99ff',
+                   fill_type='solid')
+
 
 #####Parse command line arguments
 parser = argparse.ArgumentParser(description='cBase compares the sequencing data of plasmids and PCR reads on a nucleotide per nucleotide basis.')
@@ -37,6 +42,7 @@ parser.add_argument('--dataprefix', action='store',help='prefix for the sequence
 parser.add_argument('--pcr2read', action='store', help='column where the name of the sequencing file of the 2nd pcr is found')
 parser.add_argument('--plasmidread', action='store', help='column where the name of the sequencing file of the plasmid is found')
 parser.add_argument('--shmanalysis', action='store', help='columns where the somatic hypermutation analysis should be written to. If four columns (separated by a comma) instead of one are given, the software will also give a more detailed analysis of the somatic hypermutations of the pcr2 read, of the plasmid, and the idealized antibody.')
+parser.add_argument('--manualanalysis', action='store', help='columns where the expression recommendation/manual analysis should be written')
 
 args = parser.parse_args()
 
@@ -72,6 +78,7 @@ to_compare=[]
 ### thats why we have to iterate over seq, instead of seq###
 output=""
 green=False
+yellow=False
 for seq, in pcr2read:
     ###TODO: error handling!
     if seq.value is None:
@@ -104,21 +111,29 @@ for seq, in pcr2read:
         except FileNotFoundError as err:
             output="FileNotFound"
             print(str(err))
-        #except:
-        #    output="Uncaught exception. Please inform the author of this software and provide the ab1-file(s)." 
+        except:
+            output="Uncaught exception. Please inform the author of this software and provide the ab1-file(s)." 
        
         output_cell=differential_analysis_column+str(seq.row)
 
         ws[output_cell]=output 
         if(output.find("WARNING")!=-1):
             ws[output_cell].fill = orangeFill
-        elif(output.find("nsSHM+ fr1")!=-1):
-            if(output[output.find("nsSHM+ fr1")+1:].find("nsSHM+")!=-1):#if we have additional nsSHM in other regions than fr1, we mark the cell as red
-                ws[output_cell].fill = redFill
-            else:#else it's only orange (maybe we overlooked something about the primer?)
-                ws[output_cell].fill = orangeFill
+        #2020-12-27: from now one, plasmids with one SHM will be yellow -> i.e. good for expression.
+        #elif(output.find("nsSHM+ fr1")!=-1):
+        #    if(output[output.find("nsSHM+ fr1")+1:].find("nsSHM+")!=-1):#if we have additional nsSHM in other regions than fr1, we mark the cell as red
+        #        ws[output_cell].fill = redFill
+        #    else:#else it's only orange (maybe we overlooked something about the primer?)
+        #        ws[output_cell].fill = orangeFill
         elif(output.find("nsSHM+")!=-1):
-            ws[output_cell].fill = redFill
+            ws[output_cell].fill = yellowFill
+            yellow=True
+            if(temp.total_nonsilent_mutations>1):
+                ws[output_cell].fill = orangeFill
+                yellow=False
+            elif(temp.total_nonsilent_mutations>2): 
+                ws[output_cell].fill = redFill
+                yellow=False
         elif(output.find("do not match")!=-1):
             ws[output_cell].fill = redFill
         elif(output.find("index")!=-1):
@@ -130,7 +145,8 @@ for seq, in pcr2read:
         elif(output.find("BQ")!=-1):
             ws[output_cell].fill = redFill
         elif(output.find("nsSHM-")!=-1):
-            ws[output_cell].fill = orangeFill
+            ws[output_cell].fill = lightgreenFill
+            green=True
         elif(output.find("differ")!=-1):
             ws[output_cell].fill = orangeFill
         elif(output.find("ikely")!=-1):
@@ -173,10 +189,23 @@ for seq, in pcr2read:
                 
         if(green is not True):
             print(output)
-
+        
+        if(args.manualanalysis is not None):
+            ws[args.manualanalysis+str(seq.row)].alignment=Alignment(horizontal='center')
+            if(green == True):
+                ws[args.manualanalysis+str(seq.row)].fill=deepgreenFill
+                ws[args.manualanalysis+str(seq.row)]="OK"
+            if(yellow == True):
+                ws[args.manualanalysis+str(seq.row)].fill=yellowFill
+                ws[args.manualanalysis+str(seq.row)]="1 SHM"
+            else:
+                ws[args.manualanalysis+str(seq.row)].fill=pinkFill
+                ws[args.manualanalysis+str(seq.row)]="open"
+            
         output=""
         temp=None
         green=False
+        yellow=False
     except FileNotFoundError as err:
         print(str(err))
     except ValueError as my_err:
