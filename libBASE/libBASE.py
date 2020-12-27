@@ -266,7 +266,7 @@ class SequenceFile():
                             self.IgSubClass="IgA1"
                         elif(self.seq.find("TGCTGTCGAG")==tgctg):
                             self.IgSubClass="IgA2"
-                    elif(self.IgSubClass is ""):#this is kind of a last resort step: Ig SubClass is not set and we don't find the characteristic IgA motive.
+                    elif(self.IgSubClass == ""):#this is kind of a last resort step: Ig SubClass is not set and we don't find the characteristic IgA motive.
                     #maybe we still find unique sequences for IgA1 or IgA2, usually a few bp before the tgctg motive?
                         if(self.seq.find("GGCGATGACCACGTTCCCATCTGGCTG") is not -1 and self.seq.find("GGCGATGACCACGTTCCCATCTGGCTG")< 100):
                             self.IgSubClass="IgA1"
@@ -410,7 +410,7 @@ class exportDict(collections.MutableMapping):
         self['RL']=str(parsed_sequence.len)
         self['Confirmation']="NO"
 
-        if(parsed_sequence.successfullyParsed==False  or hasattr(parsed_sequence,'BlastedOutputDict') is not True ):
+        if(parsed_sequence.successfullyParsed==False  or hasattr(parsed_sequence,'BlastedOutputDict') !=  True ):
             print("The parsed sequence " + parsed_sequence.filename + " was not blasted. The reason is: "+ parsed_sequence.comment)
             return
 
@@ -462,7 +462,7 @@ class exportDict(collections.MutableMapping):
         try:
             self['SHM']=parsed_sequence.BlastedOutputDict['alignment_summaries']['total']['mismatches']
             gaps=parsed_sequence.BlastedOutputDict['alignment_summaries']['total']['gaps'] 
-            if(gaps is not 0):
+            if(gaps !=  0):
                 self['SHM']=str(self['SHM']) + " (+" + str(gaps) + " gaps)"
         except:
             self['SHM']="N/A"
@@ -565,6 +565,7 @@ class AlignPCRObject():
     """
     def __init__(self, pcr1, pcr2):
         self.output=""
+        self.total_nonsilent_mutations=0
         self.pcr1=pcr1
         self.pcr2=pcr2
         self.shmanalysis=""
@@ -710,10 +711,12 @@ class AlignPCRObject():
             self.output+=" " + str(silent_mutations_added[reg]) + " sSHM+ " + reg + " "
         for reg in nonsilent_mutations_added:
             self.output+=" " + str(nonsilent_mutations_added[reg]) + " nsSHM+ " + reg + " "
+            self.total_nonsilent_mutations=self.total_nonsilent_mutations+1
         for reg in silent_mutations_canceled:
             self.output+= " "+ str(silent_mutations_canceled[reg]) + " sSHM- " + reg + " "
         for reg in nonsilent_mutations_exchanged:
             self.output+=" " + str(nonsilent_mutations_exchanged[reg]) + " nsSHMchg " + reg + " "
+            self.total_nonsilent_mutations=self.total_nonsilent_mutations+1
         for reg in nonsilent_mutations_canceled:
             self.output+=" " + str(nonsilent_mutations_canceled[reg]) + " nsSHM- " + reg + " "
         if(shmj_primer_canceled>0):
@@ -773,7 +776,7 @@ class AlignPCRObject():
                     self.output+=". S19G mutation in 5' primer - probably benign. "
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
                     self.output+=". sSHM (5'). "
-                elif(transl_aligned_with_leader_seq is ""):
+                elif(transl_aligned_with_leader_seq == ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
                     self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19] + " instead of MGWSCIILFLVATATGVHS."
@@ -792,7 +795,7 @@ class AlignPCRObject():
                 
                 if(plasmid_3_dash_primer_region_transl.startswith("SSASTKGPSVFPLAP")): 
                     self.output+=". sSHM (3'). "
-                elif(plasmid_3_dash_primer_region_transl is ""):
+                elif(plasmid_3_dash_primer_region_transl == ""):
                     self.output+=". CAVE: Likely Mutation in 3' primer. The 3' region could not be translated, likely non-functional plasmid"
                 else:
                     self.output+=". CAVE: Likely Mutation in 3' primer and possibly non-functional plasmid. Translation of relevant 15 aa is: " + str(plasmid_3_dash_primer_region_transl) + " instead of SSASTKGPSVFPLAP."
@@ -811,7 +814,7 @@ class AlignPCRObject():
                     self.output+=". S19G mutation in 5' primer - probably benign. "
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
                     self.output+=". sSHM (5'). "
-                elif(transl_aligned_with_leader_seq is ""):
+                elif(transl_aligned_with_leader_seq == ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
                     self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
@@ -831,7 +834,7 @@ class AlignPCRObject():
 
                 if(plasmid_3_dash_primer_region_transl.startswith("IKRTVAAPSVFIFPP")): 
                     self.output+=". sSHM (3'). "
-                elif(plasmid_3_dash_primer_region_transl is ""):
+                elif(plasmid_3_dash_primer_region_transl == ""):
                     self.output+=". CAVE: Likely Mutation in 3' primer. The 3' region could not be translated, likely non-functional plasmid"
                 else:
                     self.output+=". CAVE: Likely Mutation in 3' primer and possibly non-functional plasmid. Translation of relevant 15 aa is: " + str(plasmid_3_dash_primer_region_transl) + " instead of IKRTVAAPSVFIFPP."
@@ -850,7 +853,7 @@ class AlignPCRObject():
                     self.output+=". S19G mutation in 5' primer - probably benign. "
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCIILFLVATATGVHS")): 
                     self.output+=". sSHM (5'). "
-                elif(transl_aligned_with_leader_seq is ""):
+                elif(transl_aligned_with_leader_seq == ""):
                     self.output+=". CAVE: Likely Mutation in 5' primer. First 19 AA could not be translated, likely non-functional plasmid"
                 elif(transl_aligned_with_leader_seq.startswith("MGWSCI") is True):
                     self.output+=". CAVE: Likely Mutation in 5' primer. Translation of first 19 aa is: " + str(transl_aligned_with_leader_seq)[0:19]+ " instead of MGWSCIILFLVATATGVHS."
