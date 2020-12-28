@@ -488,7 +488,7 @@ class exportDict(collections.MutableMapping):
             if(self['Function']=="N"):
                 self["5' Primer"]=""
             else:
-                self["5' Primer"]="Primer not yet included"
+                self["5' Primer"]="primer not yet included"
 
         try:
             if(self.chain_type=="H"):
@@ -502,7 +502,7 @@ class exportDict(collections.MutableMapping):
             if(self['Function']=="N"):
                 self["3' Primer"]=""
             else:
-                self["3' Primer"]="Primer not yet included"
+                self["3' Primer"]="primer not yet included"
 
         for name, motif in restriction_motif.items():
             motif_pos= parsed_sequence.seq.find(motif) 

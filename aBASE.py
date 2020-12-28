@@ -3,9 +3,11 @@ import argparse
 import openpyxl
 from libBASE.libBASE import SequenceFile
 from libBASE.libBASE import updateExcelRow
+from libBASE.libBASE import exportDict
 import sys
 from openpyxl.utils.cell import get_column_letter
 
+import contextlib, os
 
 ###helper
 def createExportDict(ws, begin, end):
@@ -20,6 +22,15 @@ def createExportDict(ws, begin, end):
             output_dict[cell.value]=get_column_letter(cell.column)
     return output_dict 
 
+def createCloningDict(ws, begin, end):
+    """returns a dict with keys='what should go in this column' and values='excel column name', created from worksheet ws
+    """
+    cloning_output_dict=dict()
+    for row in ws[begin:end]:
+        for cell in row:
+            cloning_output_dict[cell.value]=get_column_letter(cell.column)
+    return cloning_output_dict 
+
 #####Parse command line arguments
 parser = argparse.ArgumentParser(description='aBase automatically igblasts sequencing reads and gives cloning suggestions and immunological annotations.')
 parser.add_argument('input', action='store', help='input file')
@@ -29,6 +40,8 @@ parser.add_argument('--hchain', action='store', help='column where the heavy cha
 parser.add_argument('--heavykeys', action='store', help='columns where the heavy chain output should be written to.')
 parser.add_argument('--kappakeys', action='store', help='columns where the kappa chain output should be written to.')
 parser.add_argument('--lambdakeys', action='store', help='columns where the lambda chain output should be written to.')
+parser.add_argument('--identifier', action='store', help='Two columns where the identifier information for each mAb can be found (patient ID and mAb ID.)')
+parser.add_argument('--cloningkeys', action='store', help='Five columns where the cloning recommendation output should be written to.')
 parser.add_argument('--kchain', action='store', help='column where the kappa chain is found')
 parser.add_argument('--lchain', action='store', help='column where the lambda chain is found')
 parser.add_argument('--overwrite', action='store_true', help='overwrite')
@@ -53,6 +66,7 @@ ws=workbook.active
 
 chains={}
 begin={}
+#analyzed_chains={}
 end={}
 columndict={}
 
@@ -72,19 +86,6 @@ if(args.hchain is not None):
     else:
         print("--heavykeys not set. No heavy chain data will be written")
 
-if(args.lchain is not None):
-    if(args.lchain.find(":")==-1):#we suppose this a single cell then. The following line converts Z4 to Z4:Z4
-        args.lchain=args.lchain+":"+args.lchain
-    chains['L']=workbook.active[args.lchain]
-    if(args.lambdakeys is not None):
-        begin=args.lambdakeys.split(":")[0]
-        end=args.lambdakeys.split(":")[1]
-        columndict['L']=createExportDict(ws,begin,end)
-        if('Comment' not in columndict['L'].keys()):
-            sys.exit("No column titled 'Comment' in the fields specified by --lambdakeys. Exiting...")
-    else:
-        print("--lambdakeys not set. No lambda chain data will be written")
-
 if(args.kchain is not None):
     if(args.kchain.find(":")==-1):#we suppose this a single cell then. The following line converts Z4 to Z4:Z4
         args.kchain=args.kchain+":"+args.kchain
@@ -98,24 +99,49 @@ if(args.kchain is not None):
     else:
         print("--kappakeys not set. No lambda chain data will be written")
 
-parsed_sequences=[]
+if(args.lchain is not None):
+    if(args.lchain.find(":")==-1):#we suppose this a single cell then. The following line converts Z4 to Z4:Z4
+        args.lchain=args.lchain+":"+args.lchain
+    chains['L']=workbook.active[args.lchain]
+    if(args.lambdakeys is not None):
+        begin=args.lambdakeys.split(":")[0]
+        end=args.lambdakeys.split(":")[1]
+        columndict['L']=createExportDict(ws,begin,end)
+        if('Comment' not in columndict['L'].keys()):
+            sys.exit("No column titled 'Comment' in the fields specified by --lambdakeys. Exiting...")
+    else:
+        print("--lambdakeys not set. No lambda chain data will be written")
 
-for ct in chains.keys():
+if(args.cloningkeys is not None):
+    begin=args.cloningkeys.split(":")[0]
+    end=args.cloningkeys.split(":")[1]
+    cloning_keys_dict=createCloningDict(ws,begin,end)
+else:
+    print("--cloningkeys not set. No cloning reccomendation will be written")
 
+if(args.identifier is not None):
+    patient_identifier_column=args.identifier.split(",")[0]
+    mAb_identifier_column=args.identifier.split(",")[1]
+else:
+    print("--identifier not set. No clone-ID name will be written")
+
+cloning_mAbs={}
+
+for ct in chains.keys(): # ct is a chaintype, i.e. H, K or L
     ###chains['H']] is loaded by chains['H']=workbook.active[args.heavy]. if args.heavy=Z (a whole row),
     ###a list is returned, but if args.heavy=Z4:Z240 (for example..), then a tuple is returen (?!?).
     ### thats why we have to iterate over seq, instead of seq###
-    for seq, in chains[ct]:
-        if seq.value is None:
+    for active_cell, in chains[ct]:
+        if active_cell.value is None:
             continue
         
         #check if this line has already been analyzed - and skip, args.overwrite is not set
-        if(seq.value is not None and args.overwrite is False):
-            if(ws[columndict[ct]["Confirmation"]+str(seq.row)].value!=None): 
-                print(ws[columndict[ct]["Confirmation"]+str(seq.row)].value + " has already been analyzed.")
+        if(active_cell.value is not None and args.overwrite is False):
+            if(ws[columndict[ct]["Confirmation"]+str(active_cell.row)].value!=None): 
+                print(ws[columndict[ct]["Confirmation"]+str(active_cell.row)].value + " has already been analyzed.")
                 continue
 
-        filename=seq.value
+        filename=active_cell.value
         
         #21.03.21 the following line is a workaround for the inconsistent naming scheme of Eurofins
         filename=filename.replace("-","_")
@@ -123,27 +149,42 @@ for ct in chains.keys():
         if(args.dataprefix is not None):
             filename=args.dataprefix+str(filename)+".ab1"
         try:
-            my_ps=SequenceFile(filename) 
-            parsed_sequences.append(my_ps)
-    
+            my_ps=SequenceFile(filename)
+
             if(my_ps.successfullyParsed==False):
-                ws[columndict[ct]['Comment']+str(seq.row)]=my_ps.comment 
-                ws[columndict[ct]['QV']+str(seq.row)]=my_ps.mean_phred_quality
-                ws[columndict[ct]['Confirmation']+str(seq.row)]="to be confirmed"
-                ws[columndict[ct]['Function']+str(seq.row)]="BQ"
-                ws[columndict[ct]['RL']+str(seq.row)]=my_ps.len 
+                ws[columndict[ct]['Comment']+str(active_cell.row)]=my_ps.comment 
+                ws[columndict[ct]['QV']+str(active_cell.row)]=my_ps.mean_phred_quality
+                ws[columndict[ct]['Confirmation']+str(active_cell.row)]="to be confirmed"
+                ws[columndict[ct]['Function']+str(active_cell.row)]="BQ"
+                ws[columndict[ct]['RL']+str(active_cell.row)]=my_ps.len 
             elif(my_ps.chain_type is not ct):
-                ws[columndict[ct]['Comment']+str(seq.row)]=my_ps.comment+" "+filename + " has chain type " + my_ps.chain_type
-                ws[columndict[ct]['QV']+str(seq.row)]=my_ps.mean_phred_quality
-                ws[columndict[ct]['RL']+str(seq.row)]=my_ps.len 
-                ws[columndict[ct]['Confirmation']+str(seq.row)]="to be confirmed"
-                ws[columndict[ct]['Function']+str(seq.row)]="BQ"
+                ws[columndict[ct]['Comment']+str(active_cell.row)]=my_ps.comment+" "+filename + " has chain type " + my_ps.chain_type
+                ws[columndict[ct]['QV']+str(active_cell.row)]=my_ps.mean_phred_quality
+                ws[columndict[ct]['RL']+str(active_cell.row)]=my_ps.len 
+                ws[columndict[ct]['Confirmation']+str(active_cell.row)]="to be confirmed"
+                ws[columndict[ct]['Function']+str(active_cell.row)]="BQ"
             else:
-                updateExcelRow(workbook,seq.row,columndict[ct],my_ps)
+                #TODO: deprecate updateExcelRow by moving the code of updateExcelRow here
+                updateExcelRow(workbook,active_cell.row,columndict[ct],my_ps)
+                
+                #record cloning informationin cloning_mAbs
+                if(args.cloningkeys is not None):
+                    ed=exportDict(my_ps)
+                    if(ed["5' Primer"].find(ct)!=-1 and ed["3' Primer"].find(ct)!=-1):
+                        if(ed["Function"]=="Y"):
+                            try:
+                                cloning_mAbs[active_cell.row]+=ct
+                            except:
+                                cloning_mAbs[active_cell.row]=ct
+                        else:
+                            try:
+                                cloning_mAbs[active_cell.row]+=ct+"*"
+                            except:
+                                cloning_mAbs[active_cell.row]=ct+"*"
         except FileNotFoundError:
             try:
-                ws[columndict[ct]['Function']+str(seq.row)]="BQ - file not found"
-                ws[columndict[ct]['Comment']+str(seq.row)]="File "+str(filename)+" not found."
+                ws[columndict[ct]['Function']+str(active_cell.row)]="BQ - file not found"
+                ws[columndict[ct]['Comment']+str(active_cell.row)]="File "+str(filename)+" not found."
             except:
                 sys.exit("OOPS! File " + filename + " not found! Also, either 'Comment' or 'Function' column was not found. Please make sure there are columns with that name in the range specified.")
         except ValueError as my_err:
@@ -154,5 +195,39 @@ for ct in chains.keys():
 if(args.heavykeys is None or args.lambdakeys is None or args.kappakeys is None):
     sys.exit("Please set keys")
 
-workbook.save(args.output)
+if(args.cloningkeys is not None):
+    for row in cloning_mAbs.keys():
+        # we will only clone mAbs with heavy chains
+        if(cloning_mAbs[row].find("H")==-1 or cloning_mAbs[row]=="H*" or cloning_mAbs[row]=="H" or cloning_mAbs[row]=="H*K*" or cloning_mAbs[row]=="H*L*" or cloning_mAbs[row]=="H*K*L*"):
+            continue
+        else:
+            #in case of non-functional chains, we sometimes want to restrict the chains we're cloning
+            #e.g. in case  of e.g. a functional H and L chain with a non-function K chain ("HK*L") we want to clone only H and L
+            if(cloning_mAbs[row]=="HK*L"):
+                cloning_mAbs[row]="HL"
+            elif(cloning_mAbs[row]=="HKL*"):
+                cloning_mAbs[row]="HK"
+            elif(cloning_mAbs[row]=="H*K*L"):
+                cloning_mAbs[row]="H*L"
+            elif(cloning_mAbs[row]=="H*KL*"):
+                cloning_mAbs[row]=="H*K"
+
+            ws[cloning_keys_dict["cloning?"]+str(row)]=cloning_mAbs[row].replace("*","")
+
+            #write non-functional chains to be cloned.
+            #there is only one combination where two non-functional chains will be cloned, "HK*L*", this is handled in the first clause
+            #else there is just one non-functional chain max
+            if(cloning_mAbs[row]=="HK*L*"):
+                ws[cloning_keys_dict["non functional chains"]+str(row)]= "K*L*" 
+            elif(cloning_mAbs[row].find("*")!=-1):
+                ws[cloning_keys_dict["non functional chains"]+str(row)]= cloning_mAbs[row][cloning_mAbs[row].find("*")-1] + "*" 
+            
+            if(args.identifier is not None):#write clone-IDs, e.g. 003-102
+                ws[cloning_keys_dict["clone ID"]+str(row)]=str(ws[patient_identifier_column+str(row)].value) +"-"+ str(ws[mAb_identifier_column+str(row)].value)
+
+
+# suppress "FutureWarning: The behavior of this method will change in future versions. Use specific 'len(elem)' or 'elem is not None' test instead." in 
+with open(os.devnull, 'w') as devnull:
+    with contextlib.redirect_stderr(devnull):
+        workbook.save(args.output)
 
