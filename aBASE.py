@@ -116,14 +116,23 @@ if(args.cloningkeys is not None):
     begin=args.cloningkeys.split(":")[0]
     end=args.cloningkeys.split(":")[1]
     cloning_keys_dict=createCloningDict(ws,begin,end)
+    if("cloning?" not in cloning_keys_dict):
+        print("No column named 'cloning?' found in cloningkeys, no cloning recommendation will be written")
+    if("non functional chains" not in cloning_keys_dict):
+        print("No column named 'non functional chains' found in cloningkeys, no cloning recommendation will be written")
 else:
-    print("--cloningkeys not set. No cloning reccomendation will be written")
+    print("--cloningkeys not set. No cloning recomendation will be written")
 
 if(args.identifier is not None):
     patient_identifier_column=args.identifier.split(",")[0]
     mAb_identifier_column=args.identifier.split(",")[1]
+    try:
+        if("clone ID" not in cloning_keys_dict):
+            print("No column named 'clone ID' found in cloningkeys, no cloning recommendation will be written")
+    except:
+            print("No column named 'clone ID' found in cloningkeys, no cloning recommendation will be written")
 else:
-    print("--identifier not set. No clone-ID name will be written")
+    print("--identifier not set. No clone ID will be written")
 
 cloning_mAbs={}
 
@@ -164,12 +173,20 @@ for ct in chains.keys(): # ct is a chaintype, i.e. H, K or L
                 ws[columndict[ct]['Confirmation']+str(active_cell.row)]="to be confirmed"
                 ws[columndict[ct]['Function']+str(active_cell.row)]="BQ"
             else:
-                #TODO: deprecate updateExcelRow by moving the code of updateExcelRow here
-                updateExcelRow(workbook,active_cell.row,columndict[ct],my_ps)
+                ed=exportDict(my_ps)
+                ed['Comment']=my_ps.comment
+                ed['Confirmation']="to be confirmed" 
+                #updateExcelRow(workbook,active_cell.row,columndict[ct],my_ps)
+
+                for key in columndict[ct].keys():
+                    try:
+                        ws[columndict[ct][key]+str(active_cell.row)]= ed[key]
+                    except KeyError as my_err:
+                        sys.exit("KeyError was issued. exportDict does not know what to do with key: " + str(my_err) + ". This happened while exporting " + my_ps.filename + ". Aborting...")
                 
-                #record cloning informationin cloning_mAbs
+                #record cloning information in cloning_mAbs
                 if(args.cloningkeys is not None):
-                    ed=exportDict(my_ps)
+                    #ed=exportDict(my_ps)
                     if(ed["5' Primer"].find(ct)!=-1 and ed["3' Primer"].find(ct)!=-1):
                         if(ed["Function"]=="Y"):
                             try:
