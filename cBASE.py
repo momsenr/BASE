@@ -9,7 +9,7 @@ import sys
 
 from libBASE.libBASE import AlignPCRObject
 
-from openpyxl.styles import Color, PatternFill, Font, Border, Alignment, colors, GradientFill
+from openpyxl.styles import Color, PatternFill, Font, Border, Alignment, colors
 
 redFill = PatternFill(start_color='FFFF0000',
                    end_color='FFFF0000',
