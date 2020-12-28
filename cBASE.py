@@ -9,7 +9,7 @@ import sys
 
 from libBASE.libBASE import AlignPCRObject
 
-from openpyxl.styles import Color, PatternFill, Font, Border, Alignment, colors
+from openpyxl.styles import Color, PatternFill, Font, Border, Alignment, colors, GradientFill
 
 redFill = PatternFill(start_color='FFFF0000',
                    end_color='FFFF0000',
@@ -26,8 +26,11 @@ lightgreenFill = PatternFill(start_color='92D050',
 deepgreenFill = PatternFill(start_color='00B050',
                    end_color='00B050',
                    fill_type='solid')
-purpleFill = PatternFill(start_color='826aaf',
-                   end_color='826aaf',
+purpleFill = PatternFill(start_color='b3cac7',
+                   end_color='b3cac7',
+                   fill_type='solid')
+greyFill = PatternFill(start_color='b2b2b2',
+                   end_color='b2b2b2',
                    fill_type='solid')
 pinkFill = PatternFill(start_color='ff99ff',
                    end_color='ff99ff',
@@ -103,8 +106,8 @@ for seq, in pcr2read:
         try:
             plasmid=SequenceFile(filename_plasmid)
             if(plasmid.successfullyParsed==True):
-                temp=AlignPCRObject(pcr2,plasmid)
-                output=temp.output
+                aligned_Sequences=AlignPCRObject(pcr2,plasmid)
+                output=aligned_Sequences.output
             else:
                 output="BQ: Could not blast " + plasmid.filename + ". This could either be due to bad sequencing quality, or maybe because it's an empty vector? igblast complained: " + plasmid.comment
                 
@@ -117,71 +120,59 @@ for seq, in pcr2read:
         output_cell=differential_analysis_column+str(seq.row)
 
         ws[output_cell]=output 
-        if(output.find("WARNING")!=-1):
-            ws[output_cell].fill = orangeFill
-        #2020-12-27: from now one, plasmids with one SHM will be yellow -> i.e. good for expression.
-        #elif(output.find("nsSHM+ fr1")!=-1):
-        #    if(output[output.find("nsSHM+ fr1")+1:].find("nsSHM+")!=-1):#if we have additional nsSHM in other regions than fr1, we mark the cell as red
-        #        ws[output_cell].fill = redFill
-        #    else:#else it's only orange (maybe we overlooked something about the primer?)
-        #        ws[output_cell].fill = orangeFill
-        elif(output.find("nsSHM+")!=-1):
-            ws[output_cell].fill = yellowFill
-            yellow=True
-            if(temp.total_nonsilent_mutations>1):
-                ws[output_cell].fill = orangeFill
-                yellow=False
-            elif(temp.total_nonsilent_mutations>2): 
-                ws[output_cell].fill = redFill
-                yellow=False
-        elif(output.find("do not match")!=-1):
-            ws[output_cell].fill = redFill
-        elif(output.find("index")!=-1):
-            ws[output_cell].fill = redFill
-        elif(output.find("Uncaught")!=-1):
-            ws[output_cell].fill = redFill
-        elif(output.find("FileNotFound")!=-1):
-            pass
-        elif(output.find("BQ")!=-1):
-            ws[output_cell].fill = redFill
-        elif(output.find("nsSHM-")!=-1):
-            ws[output_cell].fill = lightgreenFill
-            green=True
-        elif(output.find("differ")!=-1):
-            ws[output_cell].fill = orangeFill
-        elif(output.find("ikely")!=-1):
-            ws[output_cell].fill = orangeFill
-        elif(output.find("empty")!=-1):
-            ws[output_cell].fill = redFill
-        elif(output.find("not productive")!=-1):
-            ws[output_cell].fill = purpleFill
-        elif(output=="0"):
+        
+        #Here we color-code the cBASE output
+        if(output=="0"):
             ws[output_cell].fill = deepgreenFill
             green=True
+        elif(output.find("FileNotFound")!=-1):
+            pass
+        elif(output.find("Uncaught")!=-1 or output.find("BQ")!=-1 or output.find("empty")!=-1 or output.find("Diff")!=-1 ):#"uncaught exception", "bad quality", "empty vector", "Diff HC/KC/LC" - these will be checked before we check for productivity of the chains
+            ws[output_cell].fill = redFill
+        elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()!='yes'):
+            ws[output_cell].fill = greyFill
+        elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()=='yes'):
+            ws[output_cell].fill = purpleFill
+        elif(aligned_Sequences.D1['productive'].lower()=='yes' and aligned_Sequences.D2['productive'].lower()!='yes'):
+            ws[output_cell].fill = redFill
+        elif(output.find("index")!=-1 ):#index error #TODO orange or red?
+            ws[output_cell].fill = redFill
+        elif(output.find("differ")!=-1 or output.find("ikely")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary
+            ws[output_cell].fill = orangeFill
+        elif(output.find("nsSHM+")!=-1 or output.find("nsSHMchg")!=-1):
+            ws[output_cell].fill = yellowFill
+            yellow=True
+            if(aligned_Sequences.total_nonsilent_mutations==3):
+                ws[output_cell].fill = orangeFill
+                yellow=False
+            elif(aligned_Sequences.total_nonsilent_mutations>3): 
+                ws[output_cell].fill = redFill
+                yellow=False
         else:
             ws[output_cell].fill = lightgreenFill
             green=True
 
+
         if(len(args.shmanalysis)>1):
             try:
-                if(temp.pcr1.successfullyParsed==True):
-                    ed1=exportDict(temp.pcr1)
+                if(aligned_Sequences.pcr1.successfullyParsed==True):
+                    ed1=exportDict(aligned_Sequences.pcr1)
                     ws[pcr2_shm_column+str(seq.row)]=str(ed1['SHM'])
                 else:
                     ws[pcr2_shm_column+str(seq.row)]="n/a"
             except:
                 ws[pcr2_shm_column+str(seq.row)]="n/a"
             try:
-                if(temp.pcr2.successfullyParsed==True):
-                    ed2=exportDict(temp.pcr2)
+                if(aligned_Sequences.pcr2.successfullyParsed==True):
+                    ed2=exportDict(aligned_Sequences.pcr2)
                     ws[plasmid_shm_column+str(seq.row)]=str(ed2['SHM'])
                 else:
                     ws[plasmid_shm_column+str(seq.row)]="n/a"
             except:
                 ws[plasmid_shm_column+str(seq.row)]="n/a"
             try:
-                if(temp.pcr2.successfullyParsed==True and temp.pcr1.successfullyParsed==True):
-                    ws[ideal_shm_column+str(seq.row)]=temp.number_of_shm_v_gene_ideal
+                if(aligned_Sequences.pcr2.successfullyParsed==True and aligned_Sequences.pcr1.successfullyParsed==True):
+                    ws[ideal_shm_column+str(seq.row)]=aligned_Sequences.number_of_shm_v_gene_ideal
                 else:
                     ws[ideal_shm_column+str(seq.row)]="n/a"
             except:
@@ -197,13 +188,13 @@ for seq, in pcr2read:
                 ws[args.manualanalysis+str(seq.row)]="OK"
             elif(yellow == True):
                 ws[args.manualanalysis+str(seq.row)].fill=yellowFill
-                ws[args.manualanalysis+str(seq.row)]="1 SHM"
+                ws[args.manualanalysis+str(seq.row)]=str(aligned_Sequences.total_nonsilent_mutations) + " SHM"
             else:
                 ws[args.manualanalysis+str(seq.row)].fill=pinkFill
                 ws[args.manualanalysis+str(seq.row)]="open"
             
         output=""
-        temp=None
+        aligned_Sequences=None
         green=False
         yellow=False
     except FileNotFoundError as err:

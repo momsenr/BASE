@@ -544,6 +544,8 @@ class exportDict(collections.MutableMapping):
 
 
 def updateExcelRow(wb, row, columndict, parsed_sequence):
+    print("Use of updateExcelRow is deprecated")
+    #since we sometimes still might want to use it (i.e. for debuggin, using compareWB or similar), we keep the function as legacy
     ws=wb.active
     ed=exportDict(parsed_sequence)
     
@@ -594,31 +596,31 @@ class AlignPCRObject():
             self.shmananalysis="n/a"
             return
 
-        D1=pcr1.BlastedOutputDict
-        D2=pcr2.BlastedOutputDict
+        self.D1=pcr1.BlastedOutputDict
+        self.D2=pcr2.BlastedOutputDict
 
 
-        if(D1['top_j']!=D2['top_j'] and D1['top_v']!=D2['top_v'] ):
+        if(self.D1['top_j']!=self.D2['top_j'] and self.D1['top_v']!=self.D2['top_v'] ):
             self.output+="Diff " + pcr1.chain_type + "C (Both J and V genes do not match. These are most likely completely different chains)"
             self.shmananalysis="n/a"
             return
-        elif(D1['top_j']!=D2['top_j']):
+        elif(self.D1['top_j']!=self.D2['top_j']):
             self.output+="J genes do not match. "
-        elif(D1['top_v']!=D2['top_v']):
+        elif(self.D1['top_v']!=self.D2['top_v']):
             self.output+="V genes do not match. "
             
-        if(D1['productive'].lower()!='yes'):
+        if(self.D1['productive'].lower()!='yes'):
             self.output+=pcr1.filename + " is not productive. "
-        if(D2['productive'].lower()!='yes'):
+        if(self.D2['productive'].lower()!='yes'):
             self.output+=pcr2.filename + " is not productive. "
 
         #offset_pcr1 is the offset of the alignment of the 1st pcr with primer mix: since there is overlap by the 
         #primers, the igblast alignment sequence <-> gene usually has has a small offset of ~10 nt
         #offset_pcr2 is the same, if nothing goes wrong it is 0 (since the second pcr uses a different primer and sequences in
         #the reverse direction
-        self.offset_pcr1=int(D1['v_hits'][0]['rank_1']['s_start'])-1
-        self.offset_pcr2=int(D2['v_hits'][0]['rank_1']['s_start'])-1
-        self.pcr2_alignment_start=int(D2['gene_alignments']['v']['start'])
+        self.offset_pcr1=int(self.D1['v_hits'][0]['rank_1']['s_start'])-1
+        self.offset_pcr2=int(self.D2['v_hits'][0]['rank_1']['s_start'])-1
+        self.pcr2_alignment_start=int(self.D2['gene_alignments']['v']['start'])
         
         #offset is the offset between pcr1 and pcr2
         offset=self.offset_pcr1-self.offset_pcr2
@@ -640,7 +642,7 @@ class AlignPCRObject():
         for index, letter in enumerate(pcr1.aligned_seq):
             if(offset+index<0):
                 if(self.warning is False):
-                    self.output+="Warning: Plasmid sequence seems to be shorter than PCR2. "
+                    #self.output+="Warning: Plasmid sequence seems to be shorter than PCR2. "
                     self.warning=True
                     #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
                     #if this is not the case, we skip the first nucleotides
@@ -711,12 +713,12 @@ class AlignPCRObject():
             self.output+=" " + str(silent_mutations_added[reg]) + " sSHM+ " + reg + " "
         for reg in nonsilent_mutations_added:
             self.output+=" " + str(nonsilent_mutations_added[reg]) + " nsSHM+ " + reg + " "
-            self.total_nonsilent_mutations=self.total_nonsilent_mutations+1
+            self.total_nonsilent_mutations=self.total_nonsilent_mutations+nonsilent_mutations_added[reg]
         for reg in silent_mutations_canceled:
             self.output+= " "+ str(silent_mutations_canceled[reg]) + " sSHM- " + reg + " "
         for reg in nonsilent_mutations_exchanged:
             self.output+=" " + str(nonsilent_mutations_exchanged[reg]) + " nsSHMchg " + reg + " "
-            self.total_nonsilent_mutations=self.total_nonsilent_mutations+1
+            self.total_nonsilent_mutations=self.total_nonsilent_mutations+nonsilent_mutations_exchanged[reg]
         for reg in nonsilent_mutations_canceled:
             self.output+=" " + str(nonsilent_mutations_canceled[reg]) + " nsSHM- " + reg + " "
         if(shmj_primer_canceled>0):
