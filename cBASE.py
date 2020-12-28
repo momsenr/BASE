@@ -142,10 +142,7 @@ for seq, in pcr2read:
         elif(output.find("nsSHM+")!=-1 or output.find("nsSHMchg")!=-1):
             ws[output_cell].fill = yellowFill
             yellow=True
-            if(aligned_Sequences.total_nonsilent_mutations==3):
-                ws[output_cell].fill = orangeFill
-                yellow=False
-            elif(aligned_Sequences.total_nonsilent_mutations>3): 
+            if(aligned_Sequences.total_nonsilent_mutations>=3):
                 ws[output_cell].fill = redFill
                 yellow=False
         else:
