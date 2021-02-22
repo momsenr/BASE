@@ -129,6 +129,8 @@ for seq, in pcr2read:
             pass
         elif(output.find("Uncaught")!=-1 or output.find("BQ")!=-1 or output.find("empty")!=-1 or output.find("Diff")!=-1 ):#"uncaught exception", "bad quality", "empty vector", "Diff HC/KC/LC" - these will be checked before we check for productivity of the chains
             ws[output_cell].fill = redFill
+        elif(output.find("differ")!=-1 or output.find("ikely")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary #remark 22.02.2021: this this elif clause needs to be before the rest, since the aligned_Sequences.D1 object might not exist if the chain types differ
+            ws[output_cell].fill = orangeFill
         elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()!='yes'):
             ws[output_cell].fill = greyFill
         elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()=='yes'):
@@ -137,12 +139,13 @@ for seq, in pcr2read:
             ws[output_cell].fill = redFill
         elif(output.find("index")!=-1 ):#index error #TODO orange or red?
             ws[output_cell].fill = redFill
-        elif(output.find("differ")!=-1 or output.find("ikely")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary
-            ws[output_cell].fill = orangeFill
         elif(output.find("nsSHM+")!=-1 or output.find("nsSHMchg")!=-1):
             ws[output_cell].fill = yellowFill
             yellow=True
-            if(aligned_Sequences.total_nonsilent_mutations>=3):
+            if(aligned_Sequences.total_nonsilent_mutations==3):
+                ws[output_cell].fill = orangeFill
+                yellow=False
+            elif(aligned_Sequences.total_nonsilent_mutations>3): 
                 ws[output_cell].fill = redFill
                 yellow=False
         else:
