@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#v2021_03_05
 import argparse
 import openpyxl
 from libBASE.libBASE import SequenceFile
@@ -26,8 +27,8 @@ lightgreenFill = PatternFill(start_color='92D050',
 deepgreenFill = PatternFill(start_color='00B050',
                    end_color='00B050',
                    fill_type='solid')
-purpleFill = PatternFill(start_color='b3cac7',
-                   end_color='b3cac7',
+purpleFill = PatternFill(start_color='8f22ba',
+                   end_color='8f22ba',
                    fill_type='solid')
 greyFill = PatternFill(start_color='b2b2b2',
                    end_color='b2b2b2',
@@ -127,9 +128,9 @@ for seq, in pcr2read:
             green=True
         elif(output.find("FileNotFound")!=-1):
             pass
-        elif(output.find("Uncaught")!=-1 or output.find("BQ")!=-1 or output.find("empty")!=-1 or output.find("Diff")!=-1 ):#"uncaught exception", "bad quality", "empty vector", "Diff HC/KC/LC" - these will be checked before we check for productivity of the chains
+        elif(output.find("Uncaught")!=-1 or output.find("BQ")!=-1 or output.find("empty")!=-1 or output.find("chain types differ!")!=-1):#"uncaught exception", "bad quality", "empty vector", "Diff HC/KC/LC" - these will be checked before we check for productivity of the chains
             ws[output_cell].fill = redFill
-        elif(output.find("differ")!=-1 or output.find("ikely")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary #remark 22.02.2021: this this elif clause needs to be before the rest, since the aligned_Sequences.D1 object might not exist if the chain types differ
+        elif(output.find("completely different chains")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary #remark 22.02.2021: this this elif clause needs to be before the rest, since the aligned_Sequences.D1 object might not exist if the chain types differ
             ws[output_cell].fill = orangeFill
         elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()!='yes'):
             ws[output_cell].fill = greyFill
