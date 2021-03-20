@@ -573,12 +573,12 @@ class AlignPCRObject():
         self.shmanalysis=""
         self.number_of_shm_v_gene_ideal=""
 
-        if(pcr1.mean_phred_quality<20):
-            self.output="BQ  - " + pcr1.filename
+        if(pcr1.mean_phred_quality<10):
+            self.output="BQ  PCR2- " + pcr1.filename
             self.shmananalysis="n/a"
             return
         if(pcr2.mean_phred_quality<20):
-            self.output="BQ  - " + pcr2.filename
+            self.output="BQ  plasmid - " + pcr2.filename
             self.shmananalysis="n/a"
             return
         #if(pcr2.chain_type!="n/d"):
