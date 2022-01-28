@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#v2021_03_05
+#v2022_01_28
 import argparse
 import openpyxl
 from libBASE.libBASE import SequenceFile
@@ -130,7 +130,7 @@ for seq, in pcr2read:
             pass
         elif(output.find("Uncaught")!=-1 or output.find("BQ")!=-1 or output.find("empty")!=-1 or output.find("chain types differ!")!=-1):#"uncaught exception", "bad quality", "empty vector", "Diff HC/KC/LC" - these will be checked before we check for productivity of the chains
             ws[output_cell].fill = redFill
-        elif(output.find("completely different chains")!=-1 or output.find("WARNING")!=-1 ):#chain types differ or likely mutation in primer region - manual analysis necessary #remark 22.02.2021: this this elif clause needs to be before the rest, since the aligned_Sequences.D1 object might not exist if the chain types differ
+        elif(output.find("completely different chains")!=-1 or output.find("WARNING")!=-1 or output.find("non-functional")!=-1 or output.find("CAVE")!=-1 or output.find("do not match")!=-1):#chain types differ or likely mutation in primer region - manual analysis necessary or V/J genes do not match #remark 22.02.2021: this this elif clause needs to be before the rest, since the aligned_Sequences.D1 object might not exist if the chain types differ
             ws[output_cell].fill = orangeFill
         elif(aligned_Sequences.D1['productive'].lower()!='yes' and aligned_Sequences.D2['productive'].lower()!='yes'):
             ws[output_cell].fill = greyFill
