@@ -1,3 +1,4 @@
+#v2022_01_28
 from Bio import SeqIO
 from Bio.Data.CodonTable import TranslationError
 from Bio.SeqRecord import SeqRecord
@@ -604,11 +605,10 @@ class AlignPCRObject():
             self.output+="Diff " + pcr1.chain_type + "C (Both J and V genes do not match. These are most likely completely different chains)"
             self.shmananalysis="n/a"
             return
-        elif(self.D1['top_j']!=self.D2['top_j']):
-            self.output+="J genes do not match. "
-        elif(self.D1['top_v']!=self.D2['top_v']):
-            self.output+="V genes do not match. "
-            
+        elif(self.D1['top_j'].split("*")[0]!=self.D2['top_j'].split("*")[0]):
+            self.output+="J genes do not match. pcr2 J gene: "+ self.D1['top_j'] + ", plasmid J gene: " + self.D2['top_j'] +". "
+        elif(self.D1['top_v'].split("*")[0]!=self.D2['top_v'].split("*")[0]):
+            self.output+="V genes do not match. pcr2 V gene: "+ self.D1['top_v'] + ", plasmid V gene: " + self.D2['top_v'] +". "
         if(self.D1['productive'].lower()!='yes'):
             self.output+=pcr1.filename + " is not productive. "
         if(self.D2['productive'].lower()!='yes'):
