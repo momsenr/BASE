@@ -1,4 +1,4 @@
-#v2022_01_28
+#v2022_02_01
 from Bio import SeqIO
 from Bio.Data.CodonTable import TranslationError
 from Bio.SeqRecord import SeqRecord
@@ -620,12 +620,16 @@ class AlignPCRObject():
         #the reverse direction
         self.offset_pcr1=int(self.D1['v_hits'][0]['rank_1']['s_start'])-1
         self.offset_pcr2=int(self.D2['v_hits'][0]['rank_1']['s_start'])-1
+
+        if(self.offset_pcr2!=0):
+            self.output+="Plasmid does not fully align with germline gene. There could be something wrong with the plasmid. plasmid offset=" + str(self.offset_pcr2) + ", pcr2 offset: " + str(self.offset_pcr1)+". "
+            self.warning=True
+        
         self.pcr2_alignment_start=int(self.D2['gene_alignments']['v']['start'])
         
         #offset is the offset between pcr1 and pcr2
         offset=self.offset_pcr1-self.offset_pcr2
-        #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
-
+        
         nt_tolerance_forward=nt_tolerance_fwd[pcr2.chain_type]
         nt_tolerance_reverse=nt_tolerance_rev[pcr2.chain_type]
 
@@ -642,10 +646,13 @@ class AlignPCRObject():
         for index, letter in enumerate(pcr1.aligned_seq):
             if(offset+index<0):
                 if(self.warning is False):
-                    #self.output+="Warning: Plasmid sequence seems to be shorter than PCR2. "
-                    self.warning=True
-                    #offset is usually >=0, since pcr2 has better quality than pcr1 and usually extends the aligned sequence
+                    #offset is usually >=0, since plasmid read aligns better than pcr1 and usually extends the aligned sequence.
+                    #01.02.2022: backtest on AI ENC 113 dataset (Kreye 2021 J Exp Med, Reincke 2020 BMC) and Covid Beta 
+                    #dataset (Reincke 2022 Science) showed that this offset<0 only occurs if there is something wrong 
+                    #with the plasmids (examples: HC CS25, HC CS32, KC 113-210). In this case we 
                     #if this is not the case, we skip the first nucleotides
+                    self.output+="Warning: Alignment of plasmid sequence seems to be shorter than PCR2 (offset: " + str(offset) + "). "                 
+                    self.warning=True
                 continue
             try:
                 if(pcr2.aligned_seq[offset+index]==letter):
