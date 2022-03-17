@@ -1,4 +1,4 @@
-#v2022_02_01
+#v2022_03_17
 from Bio import SeqIO
 from Bio.Data.CodonTable import TranslationError
 from Bio.SeqRecord import SeqRecord
@@ -30,6 +30,26 @@ nt_tolerance_rev={'H': 21, 'K': 21, 'L': 0}
 #Being able to check for certain constant empty vector sequences can help troubleshooting when we habe low expression 
 #cloning efficiency (needed for cBASE)
 empty_vec_seq={'H': 'ACCGGTGTACACTCGAGCGTACGGTCGAC', 'K': 'ACCGGTTGACTAACTAGCCGTACG', 'L': 'ACCGGTTGACTAACTAGCCTCGAG'}
+
+genes_to_be_followed_primer_analysis={'H5':'1-69*07', 
+'H5':'2-70*05',
+'H5':'3-72*02',
+'H5':'4-30-1*01',
+'H5':'4-30-4*05',
+'H5':'4-30-4*06',
+'H5':'4-34*13',
+'H5':'4-39*04',
+'H5':'4-59*09',
+'H5':'4-61*07',
+'H5':'5-51*05',
+'H5':'7-40*01',
+'H5':'7-40*02',
+'H5':'7-40*03',
+'H5':'7-40*04',
+'L5':'2-8*03',
+'L5':'2-11*03',
+'L5':'2-14*04'
+}
 
 #When we did not use Gibson assembly for expression cloning, checking for certain restriction motives was necessary.
 #We leave these checks for backwards-compatability (needed for aBASE)
@@ -490,7 +510,15 @@ class exportDict(collections.MutableMapping):
                 self["5' Primer"]=""
             else:
                 self["5' Primer"]="primer not yet included"
-
+        ######
+        for name, gene in genes_to_be_followed_primer_analysis.items():
+            try:
+                if(self['IGHV'].find(gene)!=-1):
+                    self.comment+="VH Gene needs to be followed!"
+                if(self['IGLV'].find(gene)!=-1):
+                    self.comment+="VL Gene needs to be followed!"
+            except KeyError:
+                pass
         try:
             if(self.chain_type=="H"):
                 self["3' Primer"]=primer_IGHJ[self['IGHJ']] 
@@ -504,6 +532,9 @@ class exportDict(collections.MutableMapping):
                 self["3' Primer"]=""
             else:
                 self["3' Primer"]="primer not yet included"
+
+
+
 
         for name, motif in restriction_motif.items():
             motif_pos= parsed_sequence.seq.find(motif) 
